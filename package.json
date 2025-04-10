@@ -1,0 +1,13 @@
+{
+  "name": "product-id-pizza-api",
+  "version": "1.0.0",
+  "description": "Match Pizza Order Items to GHL Product IDs",
+  "main": "productID_Pizza.js",
+  "scripts": {
+    "start": "node productID_Pizza.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.18.2"
+  }
+}

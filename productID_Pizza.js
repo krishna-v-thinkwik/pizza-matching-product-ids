@@ -12,7 +12,7 @@ function normalizeString(str) {
 }
 
 function getMatchedProductIds(orderString, productsData) {
-    const products = productsData.products || [];
+    const products = Array.isArray(productsData.products) ? productsData.products : [];
 
     const productMap = new Map();
     products.forEach(product => {
@@ -20,9 +20,11 @@ function getMatchedProductIds(orderString, productsData) {
         productMap.set(normalizedName, product._id);
     });
 
-    const cleanedOrderString = orderString.replace(/,\s?(?!and)/g, " and ");
+    const cleanedOrderString = orderString
+        .replace(/,\s?(?!and)/g, " and ") // Handle commas not followed by 'and'
+        .toLowerCase();
+
     const orderItems = cleanedOrderString
-        .toLowerCase()
         .split(/\band\b/)
         .map(item => normalizeString(item.replace(/^\d+\s*/, '')))
         .filter(Boolean);
@@ -33,7 +35,11 @@ function getMatchedProductIds(orderString, productsData) {
 
     for (const orderItem of orderItems) {
         for (const [productName, productId] of productMap.entries()) {
-            if (orderItem.includes(productName)) {
+            // Match if the product name is a substring OR vice versa for partial matches
+            if (
+                orderItem.includes(productName) ||
+                productName.includes(orderItem)
+            ) {
                 matchedProductIds.push(productId);
                 break;
             }
@@ -48,8 +54,8 @@ app.post("/match-products", (req, res) => {
     try {
         const { orderString, productsData } = req.body;
 
-        if (!orderString || !productsData) {
-            return res.status(400).json({ error: "orderString and productsData are required" });
+        if (!orderString || !productsData || !Array.isArray(productsData.products)) {
+            return res.status(400).json({ error: "orderString and productsData.products array are required" });
         }
 
         const result = getMatchedProductIds(orderString, productsData);
